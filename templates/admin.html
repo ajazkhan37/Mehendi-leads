@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Mehendi by Sana</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Admin Login Page -->
+    <div id="login-page" class="admin-login-page">
+        <div class="login-container">
+            <div class="login-card">
+                <h1>Admin Login</h1>
+                <form id="admin-login-form" class="form" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="admin-email">Email</label>
+                        <input type="email" id="admin-email" name="email" required placeholder="admin@mehendi.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-password">Password</label>
+                        <input type="password" id="admin-password" name="password" required placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                    <div id="login-error" class="error-message"></div>
+                </form>
+                <p class="back-link"><a href="/">← Back to Home</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Page -->
+    <div id="dashboard-page" class="admin-dashboard-page" style="display: none;">
+        <nav class="admin-navbar">
+            <div class="container">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:1rem; flex-wrap:wrap;">
+                    <h1 style="margin:0;">Admin Dashboard</h1>
+                    <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+                        <a class="btn btn-ghost" href="/admin/hero-images">🌟 Hero Banner</a>
+                        <a class="btn btn-ghost" href="/admin/gallery">🖼️ Gallery</a>
+                        <button id="logout-btn" class="btn btn-danger">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="dashboard-header">
+                <div>
+                    <h2 style="margin-bottom:0;">Leads Management</h2>
+                    <p style="opacity:0.75; margin-top:0.25rem;">Update status, contact leads, and export CSV.</p>
+                </div>
+
+                <div class="dashboard-actions">
+                    <input type="text" id="search-input" class="search-box" placeholder="Search by name or phone...">
+                    <button id="export-btn" class="btn btn-success">📥 Export to CSV</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Statistics -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Leads</div>
+                </div>
+                <div class="stat-card stat-card-new">
+                    <div class="stat-value" id="stat-new">0</div>
+                    <div class="stat-label">New Leads</div>
+                </div>
+                <div class="stat-card stat-card-contacted">
+                    <div class="stat-value" id="stat-contacted">0</div>
+                    <div class="stat-label">Contacted Leads</div>
+                </div>
+                <div class="stat-card stat-card-booked">
+                    <div class="stat-value" id="stat-booked">0</div>
+                    <div class="stat-label">Booked Leads</div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="leads-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>WhatsApp</th>
+                            <th>Call</th>
+                            <th>Maps</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Occasion</th>
+                            <th>Event Date</th>
+                            <th>Location</th>
+                            <th>Budget</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Submitted On</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-table-body">
+                        <tr>
+                            <td colspan="14" class="text-center">Loading leads...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="no-leads" class="no-leads" style="display: none;">
+                <p>No leads found.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const page = "{{ page }}";
+            if (page === 'dashboard') {
+                checkAdminSession();
+            } else {
+                setupLoginForm();
+            }
+        });
+
+        function setupLoginForm() {
+            const form = document.getElementById('admin-login-form');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const email = document.getElementById('admin-email').value;
+                const password = document.getElementById('admin-password').value;
+
+                fetch('/admin-login', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({email, password})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/admin/dashboard';
+                    } else {
+                        const err = document.getElementById('login-error');
+                        err.textContent = data.message || 'Login failed';
+                        err.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    const err = document.getElementById('login-error');
+                    err.textContent = 'Login failed: ' + error;
+                    err.style.display = 'block';
+                });
+            });
+        }
+
+        function checkAdminSession() {
+            fetch('/api/leads', { credentials: 'same-origin' })
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/admin';
+                    } else {
+                        showDashboard();
+                    }
+                })
+                .catch(() => window.location.href = '/admin');
+        }
+
+        function escapeHtml(str) {
+            return (str || '').toString().replace(/[&<>"']/g, function (m) {
+                return ({
+                    '&': '&amp;',
+                    '<': '<',
+                    '>': '>',
+                    '"': '"',
+                    "'": '&#039;'
+                })[m];
+            });
+        }
+
+        function whatsappLink(lead) {
+            const target = (lead.whatsapp_number || lead.phone || '').toString().replace(/\D/g, '');
+            const text = encodeURIComponent('Hi! I am interested in booking your mehendi services. Please contact me.');
+            if (!target) return '';
+            return `https://wa.me/${target}?text=${text}`;
+        }
+
+        function callLink(lead) {
+            const target = (lead.phone || '').toString().replace(/\D/g, '');
+            if (!target) return '';
+            return `tel:+91${target}`;
+        }
+
+        function mapsLink(lead) {
+            if (lead.maps_link) return lead.maps_link;
+            const q = encodeURIComponent([lead.full_address, lead.location].filter(Boolean).join(', '));
+            if (!q) return '';
+            return `https://www.google.com/maps/search/?api=1&query=${q}`;
+        }
+
+        function statusOptions(selected) {
+            const opts = ['New', 'Contacted', 'Booked', 'Closed'];
+            return opts.map(s => `<option value="${escapeHtml(s)}"${s === selected ? ' selected' : ''}>${escapeHtml(s)}</option>`).join('');
+        }
+
+        function computeStats(leads) {
+            const counts = { total: leads.length, New: 0, Contacted: 0, Booked: 0 };
+            leads.forEach(l => {
+                const st = l.lead_status || 'New';
+                if (st in counts) counts[st] += 1;
+            });
+            document.getElementById('stat-total').textContent = counts.total;
+            document.getElementById('stat-new').textContent = counts.New;
+            document.getElementById('stat-contacted').textContent = counts.Contacted;
+            document.getElementById('stat-booked').textContent = counts.Booked;
+        }
+
+        function loadLeads() {
+            fetch('/api/leads', { credentials: 'same-origin' })
+                .then(response => response.json())
+                .then(leads => {
+                    const tbody = document.getElementById('leads-table-body');
+                    tbody.innerHTML = '';
+
+                    if (!leads || leads.length === 0) {
+                        document.getElementById('no-leads').style.display = 'block';
+                        tbody.innerHTML = '<tr><td colspan="14" class="text-center">No leads found</td></tr>';
+                        return;
+                    }
+
+                    document.getElementById('no-leads').style.display = 'none';
+                    computeStats(leads);
+
+                    leads.forEach(lead => {
+                        const status = lead.lead_status || 'New';
+
+                        const wa = whatsappLink(lead);
+                        const call = callLink(lead);
+                        const maps = mapsLink(lead);
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${lead.id}</td>
+                            <td>${escapeHtml(lead.name)}</td>
+                            <td>${wa ? `<a class="btn btn-success btn-sm" target="_blank" href="${wa}">WhatsApp</a>` : '-'}</td>
+                            <td>${call ? `<a class="btn btn-primary btn-sm" href="${call}">Call</a>` : '-'}</td>
+                            <td>${maps ? `<a class="btn btn-ghost btn-sm" target="_blank" href="${maps}">Maps</a>` : '-'}</td>
+                            <td>${escapeHtml(lead.phone)}</td>
+                            <td>${escapeHtml(lead.email || '-')}</td>
+                            <td>${escapeHtml(lead.event_type || '-')}</td>
+                            <td>${escapeHtml(lead.event_date || '-')}</td>
+                            <td>${escapeHtml(lead.location || '-')}</td>
+                            <td>${escapeHtml(lead.budget || '-')}</td>
+                            <td>${lead.additional_notes ? escapeHtml(lead.additional_notes).substring(0, 50) + (lead.additional_notes.length > 50 ? '...' : '') : '-'}</td>
+                            <td>
+                                <select class="status-select" data-lead-id="${lead.id}">
+                                    ${statusOptions(status)}
+                                </select>
+                            </td>
+                            <td>${lead.created_at ? escapeHtml(new Date(lead.created_at).toLocaleDateString()) : '-'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    document.querySelectorAll('.status-select').forEach(sel => {
+                        sel.addEventListener('change', function() {
+                            const leadId = parseInt(this.getAttribute('data-lead-id'), 10);
+                            const newStatus = this.value;
+
+                            fetch(`/admin/leads/${leadId}/status`, {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ lead_status: newStatus })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (!data.success) {
+                                    alert(data.message || 'Failed to update status');
+                                } else {
+                                    loadLeads();
+                                }
+                            })
+                            .catch(() => alert('Failed to update status'));
+                        });
+                    });
+                });
+        }
+
+        function filterTable() {
+            const input = document.getElementById('search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#leads-table-body tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboard-page').style.display = 'block';
+
+            loadLeads();
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' })
+                    .then(() => window.location.href = '/admin');
+            });
+
+            document.getElementById('export-btn').addEventListener('click', function() {
+                fetch('/admin/export', { method: 'POST', credentials: 'same-origin' })
+                    .then(response => response.text())
+                    .then(csv => {
+                        const link = document.createElement('a');
+                        link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+                        link.download = 'leads_' + new Date().toISOString().split('T')[0] + '.csv';
+                        link.click();
+                    });
+            });
+
+            document.getElementById('search-input').addEventListener('keyup', filterTable);
+        }
+    </script>
+</body>
+</html>

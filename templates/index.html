@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mehendi by Sana | Mumbai • Since 2022</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1>Mehendi by Sana</h1>
+                <div class="brand-subtitle">Mumbai • Since 2022</div>
+            </div>
+
+            <div class="navbar-menu">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#gallery" class="nav-link">Gallery</a>
+                <a href="#reviews" class="nav-link">Reviews</a>
+                <a href="#faq" class="nav-link">FAQ</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+
+            <div class="navbar-right">
+                <a id="whatsapp-btn" class="nav-link whatsapp-btn" href="javascript:void(0)">
+                    <span>💬 WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div class="hero-top">
+
+                <!-- Content (left) -->
+                <div class="hero-left">
+                    <div class="hero-badge" aria-label="Mumbai's Top Rated Artist">
+                        <span>Mumbai's Top Rated Artist</span>
+                    </div>
+
+                    <h1 class="hero-heading">
+                        <span class="hero-heading-line hero-heading-dark">Beautiful Mehendi</span>
+                        <span class="hero-heading-line hero-heading-accent">Made Simple.</span>
+                    </h1>
+
+                    <p class="hero-subheading">
+                        Find and book professional mehendi services for weddings, sangeet, engagement and special occasions.
+                    </p>
+
+                    <div class="hero-service-pills" aria-label="Popular services">
+                        <span class="hero-pill">👰 Bridal Mehendi</span>
+                        <span class="hero-pill">🌙 Arabic Mehendi</span>
+                        <span class="hero-pill">🌸 Traditional Indian</span>
+                    </div>
+
+                    <div class="hero-trust" aria-label="Trust info">
+                        <div class="hero-trust-rating">
+                            <span class="hero-stars" aria-hidden="true">★★★★★</span>
+                            <span class="hero-rating-text">4.9/5 Rating</span>
+                        </div>
+                        <div class="hero-trust-brides">500+ Happy Brides</div>
+                    </div>
+
+                    <div class="hero-cta">
+                        <button class="btn btn-primary" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">
+                            Free Quote Mangao
+                        </button>
+                        <button class="btn btn-success" onclick="openWhatsAppQuote()">
+                            WhatsApp pe seedha baat karo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Featured Image Card (right) -->
+                <div class="hero-media">
+                    <div id="hero-image-card" class="hero-image-card" aria-label="Featured hero image">
+                        <div id="hero-image-placeholder" class="hero-image-placeholder">
+                            <div class="hero-placeholder-inner">
+                                <div class="hero-placeholder-icon" aria-hidden="true">✦</div>
+                                <div class="hero-placeholder-text">Premium Mehendi Collection</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Booking Form -->
+    <section id="booking" class="booking-section">
+        <div class="container">
+            <div class="booking-card">
+                <h2 style="margin-top:0;">Book your appointment</h2>
+                <p style="margin-top:-0.5rem; color: rgba(0,0,0,0.65); font-weight:700;">Get a free quote</p>
+
+                <form id="booking-form" class="form">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="10-digit number">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email (optional)</label>
+                            <input type="email" id="email" name="email" placeholder="your@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event_type">Occasion *</label>
+                            <select id="event_type" name="event_type" required>
+                                <option value="">Select occasion</option>
+                                <option value="Bridal Mehendi">Bridal Mehendi</option>
+                                <option value="Sangeet">Sangeet</option>
+                                <option value="Arabic Mehendi">Arabic Mehendi</option>
+                                <option value="Karwa Chauth">Karwa Chauth</option>
+                                <option value="Party/Event">Party/Event</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="event_date">Event Date</label>
+                            <input type="date" id="event_date" name="event_date">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pincode">Pincode</label>
+                            <input type="text" id="pincode" name="pincode" inputmode="numeric" placeholder="6-digit pincode">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location &amp; Extra Details</label>
+                            <input type="text" id="location" name="location"
+                                   placeholder="Mumbai mein kahan hai? Kitne log hain? Koi special design?">
+                        </div>
+                    </div>
+
+                    <!-- Extra details -> mapped to additional_notes -->
+                    <div class="form-group">
+                        <label for="additional_notes">Extra Details (optional)</label>
+                        <textarea id="additional_notes" name="additional_notes" rows="4"
+                                  placeholder="Design style, preferred colors, number of people, any references..."></textarea>
+                    </div>
+
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1 1 220px;">Free Quote Mangao</button>
+                        <button type="button" class="btn btn-success" style="flex: 1 1 220px;" onclick="openWhatsAppQuote()">WhatsApp pe seedha baat karo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="reviews" class="gallery-section" style="background: #fff;">
+        <div class="container" style="padding: 20px 0;">
+            <h2 style="color: var(--primary-color); margin-bottom: 1.7rem;">Customers kya kehte hain</h2>
+
+            <div class="gallery-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem;">
+                <div class="gallery-item" style="padding: 1.2rem; box-shadow: var(--shadow);">
+                    <div style="color:#d4af37; font-size: 1.1rem; font-weight:800;">★★★★★</div>
+                    <p style="margin: 0.7rem 0 1rem; font-weight:700; color:#444;">
+                        Bridal mehendi ekdum perfect thi. Design bahut detailed aur color bhi bahut acha aaya.
+                    </p>
+                    <div style="opacity:0.75; font-weight:700;">— Sneha R., Bandra</div>
+                </div>
+
+                <div class="gallery-item" style="padding: 1.2rem; box-shadow: var(--shadow);">
+                    <div style="color:#d4af37; font-size: 1.1rem; font-weight:800;">★★★★★</div>
+                    <p style="margin: 0.7rem 0 1rem; font-weight:700; color:#444;">
+                        Sangeet mein poori family ne mehendi lagwayi. Sab ne tarif ki. Definitely recommend!
+                    </p>
+                    <div style="opacity:0.75; font-weight:700;">— Anjali M., Andheri</div>
+                </div>
+
+                <div class="gallery-item" style="padding: 1.2rem; box-shadow: var(--shadow);">
+                    <div style="color:#d4af37; font-size: 1.1rem; font-weight:800;">★★★★★</div>
+                    <p style="margin: 0.7rem 0 1rem; font-weight:700; color:#444;">
+                        Time pe aayi, kaam fast aur clean tha. Price bhi reasonable. Bohot khush hoon!
+                    </p>
+                    <div style="opacity:0.75; font-weight:700;">— Divya K., Powai</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services & Pricing -->
+    <section id="services" class="gallery-section">
+        <div class="container">
+            <h2 style="color: var(--primary-color); margin-bottom: 2.2rem;">Services &amp; Pricing</h2>
+
+            <div class="gallery-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.2rem;">
+                <div class="gallery-item" style="padding: 1.2rem;">
+                    <div style="font-size: 1.6rem;">👰</div>
+                    <h3 style="margin:0.4rem 0 0.6rem;">Bridal Full</h3>
+                    <div style="color: var(--primary-color); font-weight:900;">₹4,000 – ₹8,000</div>
+                    <p style="margin-top:0.7rem; opacity:0.75; font-weight:700;">Signature bridal detailing + premium finish.</p>
+                </div>
+
+                <div class="gallery-item" style="padding: 1.2rem;">
+                    <div style="font-size: 1.6rem;">🎵</div>
+                    <h3 style="margin:0.4rem 0 0.6rem;">Sangeet Party</h3>
+                    <div style="color: var(--primary-color); font-weight:900;">₹500/person</div>
+                    <p style="margin-top:0.7rem; opacity:0.75; font-weight:700;">Family-friendly booking for group events.</p>
+                </div>
+
+                <div class="gallery-item" style="padding: 1.2rem;">
+                    <div style="font-size: 1.6rem;">🌙</div>
+                    <h3 style="margin:0.4rem 0 0.6rem;">Karwa Chauth</h3>
+                    <div style="color: var(--primary-color); font-weight:900;">₹800 – ₹1,500</div>
+                    <p style="margin-top:0.7rem; opacity:0.75; font-weight:700;">Traditional mehendi patterns with elegance.</p>
+                </div>
+
+                <div class="gallery-item" style="padding: 1.2rem;">
+                    <div style="font-size: 1.6rem;">🎉</div>
+                    <h3 style="margin:0.4rem 0 0.6rem;">Function/Event</h3>
+                    <div style="color: var(--primary-color); font-weight:900;">₹400/person</div>
+                    <p style="margin-top:0.7rem; opacity:0.75; font-weight:700;">Perfect for celebrations &amp; house parties.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Gallery -->
+    <section id="gallery" class="gallery-section" style="background: var(--light-bg);">
+        <div class="container">
+            <h2>Portfolio Gallery</h2>
+
+            <div class="gallery-filter" role="tablist" aria-label="Gallery categories">
+                <button class="gallery-filter-btn gallery-filter-btn--active" type="button" data-category="All" onclick="setGalleryCategory('All')">All</button>
+                <button class="gallery-filter-btn" type="button" data-category="Bridal" onclick="setGalleryCategory('Bridal')">Bridal</button>
+                <button class="gallery-filter-btn" type="button" data-category="Arabic" onclick="setGalleryCategory('Arabic')">Arabic</button>
+                <button class="gallery-filter-btn" type="button" data-category="Rajasthani" onclick="setGalleryCategory('Rajasthani')">Rajasthani</button>
+                <button class="gallery-filter-btn" type="button" data-category="Karwa Chauth" onclick="setGalleryCategory('Karwa Chauth')">Karwa Chauth</button>
+                <button class="gallery-filter-btn" type="button" data-category="Party/Event" onclick="setGalleryCategory('Party/Event')">Party/Event</button>
+            </div>
+
+            <div id="gallery-grid" class="gallery-grid"></div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="booking-section" style="background:#fff;">
+        <div class="container">
+            <h2 style="color: var(--primary-color); margin-bottom: 1.6rem;">FAQ</h2>
+
+            <div class="faq">
+                <details class="faq-item">
+                    <summary>Home service available?</summary>
+                    <p>Yes, home service is available in Mumbai and nearby areas.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Advance booking required?</summary>
+                    <p>For weddings &amp; big occasions we recommend booking early to confirm your slot.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Bridal mehendi cost?</summary>
+                    <p>Bridal full detailing typically starts from ₹4,000 and goes up based on design complexity.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Travel charges?</summary>
+                    <p>Travel is included for local Mumbai locations. For farther areas, we confirm after your location.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>WhatsApp booking possible?</summary>
+                    <p>Yes. You can send your details on WhatsApp and we’ll respond with a free quote.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="gallery-section">
+        <div class="container" style="text-align:center;">
+            <h2 style="color: var(--primary-color);">Contact</h2>
+            <p style="font-weight:700; opacity:0.8; margin-bottom: 1.5rem;">
+                WhatsApp for instant response &amp; free quote.
+            </p>
+            <button class="btn btn-success" onclick="openWhatsAppQuote()">WhatsApp pe seedha baat karo</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p style="font-weight:800; margin-bottom: 0.5rem;">Mehendi by Sana</p>
+            <p style="opacity:0.9;">WhatsApp • Instagram • Contact Number</p>
+            <p>Mumbai</p>
+            <p style="opacity:0.8;">&copy; <span id="year"></span> Mehendi by Sana. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        let currentGalleryCategory = 'All';
+
+        async function loadGallery(category) {
+            const grid = document.getElementById('gallery-grid');
+            if (!grid) return;
+
+            const res = await fetch(`/api/gallery-images?category=${encodeURIComponent(category)}`);
+            const images = await res.json();
+
+            grid.innerHTML = '';
+            if (!images || images.length === 0) {
+                grid.innerHTML = `
+                    <div class="gallery-item">
+                        <div class="gallery-placeholder">No images yet</div>
+                    </div>
+                `;
+                return;
+            }
+
+            images.forEach(img => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item gallery-portfolio-item';
+                item.innerHTML = `
+                    <img src="${img.image_url}" alt="Gallery ${img.category}" loading="lazy" />
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function setGalleryCategory(category) {
+            currentGalleryCategory = category;
+
+            // Toggle active category pill
+            document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
+                const btnCat = btn.getAttribute('data-category');
+                const isActive = String(btnCat) === String(category);
+                btn.classList.toggle('gallery-filter-btn--active', isActive);
+            });
+
+            loadGallery(category);
+        }
+
+        // WhatsApp helpers (script.js also has a WhatsApp button handler; this is fallback)
+        function openWhatsAppQuote() {
+            const message = encodeURIComponent('Hi! I want a free quote for Mehendi. Please contact me.');
+            const phoneNumber = window.MEHENDI_WHATSAPP_NUMBER || '919876543210';
+            window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGallery(currentGalleryCategory);
+
+            // Load hero image dynamically from DB
+            fetch('/api/hero-image')
+                .then(res => res.json())
+                .then(data => {
+                    const card = document.getElementById('hero-image-card');
+                    if (!card) return;
+
+                    const placeholder = document.getElementById('hero-image-placeholder');
+                    if (data && data.image_url) {
+                        const img = document.createElement('img');
+                        img.src = data.image_url;
+                        img.alt = 'Featured hero image';
+                        img.loading = 'eager';
+                        img.className = 'hero-image';
+
+                        card.innerHTML = '';
+                        card.appendChild(img);
+                    } else {
+                        // Keep placeholder visible
+                        if (placeholder) placeholder.style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    // Keep placeholder on errors
+                });
+        });
+
+    </script>
+</body>
+</html>

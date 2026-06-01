@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery Management - Mehendi by Sana</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="gallery-page" class="admin-dashboard-page">
+        <nav class="admin-navbar">
+            <div class="container">
+                <h1>Gallery Management</h1>
+                <div class="admin-navbar-actions">
+                    <a class="btn btn-ghost" href="/admin/dashboard">← Back to Leads</a>
+                    <button id="logout-btn" class="btn btn-danger">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="dashboard-header">
+                <h2>Upload & Manage Images</h2>
+                <div class="dashboard-actions">
+                    <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 700px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="upload-category">Category</label>
+                            <select id="upload-category" class="select-input">
+                                <option value="Bridal">Bridal</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="Rajasthani">Rajasthani</option>
+                                <option value="Karwa Chauth">Karwa Chauth</option>
+                                <option value="Party/Event">Party/Event</option>
+                                <option value="All">All</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="upload-file">Image (JPG/JPEG/PNG/WEBP)</label>
+                            <input id="upload-file" class="file-input" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                        </div>
+                    </div>
+
+                    <button id="upload-btn" class="btn btn-primary" style="align-self: end;">Upload Image</button>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <div class="table-responsive">
+                    <div class="gallery-admin-toolbar">
+                        <div class="gallery-admin-filters">
+                            <label for="filter-category" style="font-weight: 700;">Filter</label>
+                            <select id="filter-category" class="select-input">
+                                <option value="All">All</option>
+                                <option value="Bridal">Bridal</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="Rajasthani">Rajasthani</option>
+                                <option value="Karwa Chauth">Karwa Chauth</option>
+                                <option value="Party/Event">Party/Event</option>
+                            </select>
+                        </div>
+                        <div class="gallery-admin-hint">
+                            <span>Tip: Upload in correct category for homepage filtering.</span>
+                        </div>
+                    </div>
+
+                    <div id="gallery-admin-grid" class="gallery-admin-grid"></div>
+
+                    <div id="no-gallery-images" class="no-leads" style="display:none;">
+                        <p>No gallery images found.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AUTH_ROUTES = {
+            logout: '/admin/logout',
+            images: '/api/gallery-images',
+            upload: '/admin/gallery/upload',
+            del: (id) => `/admin/gallery/delete/${id}`,
+            edit: (id) => `/admin/gallery/edit/${id}`
+        };
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function () {
+                fetch(AUTH_ROUTES.logout, { method: 'POST', credentials: 'same-origin' })
+                    .then(() => window.location.href = '/admin');
+            });
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/[&<>"']/g, function (m) {
+                return ({
+                    '&': '&amp;',
+                    '<': '<',
+                    '>': '>',
+                    '"': '"',
+                    "'": '&#039;'
+                })[m];
+            });
+        }
+
+        async function loadImages() {
+            const filter = document.getElementById('filter-category')?.value || 'All';
+            const res = await fetch(`/api/gallery-images?category=${encodeURIComponent(filter)}`, { credentials: 'same-origin' });
+            const images = await res.json();
+
+            const grid = document.getElementById('gallery-admin-grid');
+            const empty = document.getElementById('no-gallery-images');
+
+            grid.innerHTML = '';
+            if (!images || images.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+
+            images.forEach(img => {
+                const card = document.createElement('div');
+                card.className = 'gallery-admin-card';
+                card.innerHTML = `
+                    <div class="gallery-admin-img-wrap">
+                        <img src="${escapeHtml(img.image_url)}" alt="Gallery image" loading="lazy" />
+                    </div>
+                    <div class="gallery-admin-meta">
+                        <div class="gallery-admin-row">
+                            <div class="pill pill-soft">${escapeHtml(img.category || 'All')}</div>
+                            <div class="gallery-admin-id">#${img.id}</div>
+                        </div>
+
+                        <div class="gallery-admin-row">
+                            <label class="small-label" for="cat-${img.id}">Edit category</label>
+                            <select id="cat-${img.id}" class="select-input">
+                                ${categoryOptions(img.category)}
+                            </select>
+                        </div>
+
+                        <div class="gallery-admin-actions">
+                            <button class="btn btn-success btn-sm" onclick="updateCategory(${img.id})">Save</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteImage(${img.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function categoryOptions(selected) {
+            const opts = [
+                'Bridal',
+                'Arabic',
+                'Rajasthani',
+                'Karwa Chauth',
+                'Party/Event',
+                'All'
+            ];
+            return opts.map(c => `<option value="${escapeHtml(c)}"${c === selected ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
+        }
+
+        async function uploadImage() {
+            const fileEl = document.getElementById('upload-file');
+            const category = document.getElementById('upload-category')?.value || 'All';
+
+            if (!fileEl || !fileEl.files || fileEl.files.length === 0) {
+                alert('Please choose an image file first.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileEl.files[0]);
+            formData.append('category', category);
+
+            const res = await fetch(AUTH_ROUTES.upload, {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Upload failed');
+                return;
+            }
+
+            fileEl.value = '';
+            await loadImages();
+            alert('Image uploaded successfully.');
+        }
+
+        async function deleteImage(id) {
+            if (!confirm('Delete this image?')) return;
+
+            const res = await fetch(AUTH_ROUTES.del(id), {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Delete failed');
+                return;
+            }
+            await loadImages();
+        }
+
+        async function updateCategory(id) {
+            const select = document.getElementById(`cat-${id}`);
+            const category = select?.value || 'All';
+
+            const res = await fetch(AUTH_ROUTES.edit(id), {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category })
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Update failed');
+                return;
+            }
+            await loadImages();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('upload-btn')?.addEventListener('click', uploadImage);
+            document.getElementById('filter-category')?.addEventListener('change', loadImages);
+            loadImages();
+
+            if (window.history && window.history.replaceState) {
+                // no-op; keeps page clean
+            }
+        });
+    </script>
+</body>
+</html>

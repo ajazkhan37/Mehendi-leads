@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Banner Management - Mehendi by Sana</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div id="hero-admin-page" class="admin-dashboard-page">
+
+    <nav class="admin-navbar">
+        <div class="container">
+            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:1rem; flex-wrap:wrap;">
+                <h1 style="margin:0;">Hero Banner Management</h1>
+                <div class="admin-navbar-actions">
+                    <a class="btn btn-ghost" href="/admin/dashboard">← Back to Leads</a>
+                    <button id="logout-btn" class="btn btn-danger">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="dashboard-header">
+            <div>
+                <h2 style="margin-bottom:0;">Upload, Preview & Set Active Hero Image</h2>
+                <p style="opacity:0.75; margin-top:0.25rem;">Only one hero image can be active at a time.</p>
+            </div>
+
+            <div class="dashboard-actions" style="width:100%;">
+                <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 700px;">
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="hero-upload-file">Select Image</label>
+                        <input id="hero-upload-file" class="file-input" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:flex-end;">
+                        <button id="hero-upload-btn" class="btn btn-primary" type="button">Upload</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card-section">
+            <div class="table-responsive">
+                <div class="gallery-admin-toolbar" style="margin-bottom:1rem;">
+                    <div class="gallery-admin-hint">
+                        Tip: Upload a new image, then click <b>Set Active</b>.
+                    </div>
+                    <div class="gallery-admin-actions">
+                        <button id="refresh-btn" class="btn btn-ghost">Refresh</button>
+                    </div>
+                </div>
+
+                <div id="hero-admin-grid" class="gallery-admin-grid"></div>
+                <div id="no-hero-images" class="no-leads" style="display:none;">
+                    <p>No hero images uploaded yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const AUTH_ROUTES = {
+        logout: '/admin/logout',
+        list: '/api/hero-images',
+        upload: '/admin/hero/upload',
+        setActive: (id) => `/admin/hero/set-active/${id}`,
+        del: (id) => `/admin/hero/delete/${id}`
+    };
+
+    function escapeHtml(str) {
+        return (str || '').toString().replace(/[&<>"']/g, function (m) {
+            return ({
+                '&': '&amp;',
+                '<': '<',
+                '>': '>',
+                '"': '"',
+                "'": '&#039;'
+            })[m];
+        });
+    }
+
+    function formatDate(val) {
+        if (!val) return '-';
+        try {
+            return new Date(val).toLocaleString();
+        } catch (e) {
+            return val;
+        }
+    }
+
+    function heroCardHtml(img) {
+        const isActive = !!img.is_active;
+        const activeTag = isActive ? `<span class="pill" style="background: rgba(216,79,135,0.12); color: var(--primary-color); border: 1px solid rgba(216,79,135,0.25);">Active</span>` : '';
+
+        return `
+            <div class="gallery-admin-card" style="display:flex; flex-direction:column;">
+                <div class="gallery-admin-img-wrap" style="aspect-ratio: 16/9;">
+                    <img src="${escapeHtml(img.image_url)}" alt="Hero preview" loading="lazy" />
+                </div>
+                <div class="gallery-admin-meta" style="flex: 1; display:flex; flex-direction:column; gap:0.6rem;">
+                    <div class="gallery-admin-row" style="margin:0;">
+                        <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                            <div class="gallery-admin-id">#${img.id}</div>
+                            ${activeTag}
+                        </div>
+                        <div style="opacity:0.75; font-weight:700; font-size:0.9rem;">${formatDate(img.created_at)}</div>
+                    </div>
+
+                    <div class="gallery-admin-actions" style="margin-top:auto;">
+                        <button class="btn btn-success btn-sm" onclick="setActive(${img.id})" ${isActive ? 'disabled' : ''}>
+                            ${isActive ? 'Active' : 'Set Active'}
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteHero(${img.id})">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadHeroImages() {
+        const grid = document.getElementById('hero-admin-grid');
+        const empty = document.getElementById('no-hero-images');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        const res = await fetch(AUTH_ROUTES.list, { credentials: 'same-origin' });
+        const data = await res.json();
+        const images = data?.images || [];
+
+        if (!images || images.length === 0) {
+            empty.style.display = 'block';
+            return;
+        }
+
+        empty.style.display = 'none';
+        images.forEach(img => {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = heroCardHtml(img);
+            grid.appendChild(wrapper.firstElementChild);
+        });
+    }
+
+    async function uploadHero() {
+        const fileEl = document.getElementById('hero-upload-file');
+        if (!fileEl?.files?.length) {
+            alert('Please choose an image file first.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', fileEl.files[0]);
+
+        const res = await fetch(AUTH_ROUTES.upload, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || 'Upload failed');
+            return;
+        }
+
+        fileEl.value = '';
+        await loadHeroImages();
+        alert('Hero image uploaded successfully.');
+    }
+
+    async function setActive(id) {
+        if (!confirm('Set this hero image as Active? This will deactivate others.')) return;
+
+        const res = await fetch(AUTH_ROUTES.setActive(id), {
+            method: 'POST',
+            credentials: 'same-origin'
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || 'Failed to set active');
+            return;
+        }
+
+        await loadHeroImages();
+    }
+
+    async function deleteHero(id) {
+        if (!confirm('Delete this hero image?')) return;
+
+        const res = await fetch(AUTH_ROUTES.del(id), {
+            method: 'POST',
+            credentials: 'same-origin'
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || 'Delete failed');
+            return;
+        }
+
+        await loadHeroImages();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('hero-upload-btn').addEventListener('click', uploadHero);
+        document.getElementById('refresh-btn').addEventListener('click', loadHeroImages);
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function () {
+                fetch(AUTH_ROUTES.logout, { method: 'POST', credentials: 'same-origin' })
+                    .then(() => window.location.href = '/admin');
+            });
+        }
+
+        loadHeroImages();
+    });
+</script>
+</body>
+</html>
+
